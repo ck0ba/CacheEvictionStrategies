@@ -3,48 +3,52 @@ package ck0ba.org;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class MRUCache<K, V> extends LinkedHashMap<K, V> implements Cache<K, V> {
+public class MRUCache<K, V> implements Cache<K, V> {
+    private final Map<K, V> map;
     private final int capacity;
 
+
     public MRUCache(int capacity) {
-        super(capacity, 0.75f, true);
         this.capacity = capacity;
+        this.map = new LinkedHashMap<K, V>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+                return false; // MRU removal is handled explicitly
+            }
+        };
     }
 
     @Override
-    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-        if (size() > capacity) {
-            remove(getLastKey());
-            return true;
+    public void put(K key, V value) {
+        if (map.size() >= capacity && !map.containsKey(key)) {
+            remove(getMostRecentlyUsedKey());
         }
-        return false;
+
+
+        map.put(key, value);
     }
 
-    private K getLastKey() {
+    private K getMostRecentlyUsedKey() {
         K lastKey = null;
-        for (K key : this.keySet()) {
+        for (K key : map.keySet()) {
             lastKey = key;
         }
+
         return lastKey;
     }
 
     @Override
-    public void put1(K key, V value) {
-        super.put(key, value);
-    }
-
-    @Override
     public V get(K key) {
-        return super.get(key);
+        return map.get(key);
     }
 
     @Override
     public void remove(K key) {
-        super.remove(key);
+        map.remove(key);
     }
 
     @Override
     public int size() {
-        return super.size();
+        return map.size();
     }
 }
